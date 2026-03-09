@@ -415,42 +415,55 @@ function toggleTexture(name,el){
 async function submitForm(){
   const btn=document.getElementById('submit-btn');
   btn.textContent='Wird gespeichert…';btn.disabled=true;
-  const h={'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY,
-    'Content-Type':'application/json','Prefer':'return=representation'};
-  const hUpsert={'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY,
-    'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=representation'};
+  const h={'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
   try{
-    // Upsert customer — wenn E-Mail schon existiert, Daten aktualisieren
-    const cr=await fetch(SUPABASE_URL+'/rest/v1/customers?on_conflict=email',{
-      method:'POST',headers:hUpsert,
-      body:JSON.stringify({
-        first_name:fd.first_name||null,last_name:fd.last_name||null,
-        email:fd.email||null,phone:fd.phone||null,birthday:fd.birthday||null,
-        is_newsletter:fd.newsletter,tags:['Styleberatung'],
-        updated_at:new Date().toISOString()
-      })});
-    if(!cr.ok)throw new Error(await cr.text());
-    const cd=await cr.json();
-    const cid=cd[0]?.id;
-    if(!cid)throw new Error('Keine Kunden-ID erhalten');
+    // 1) Prüfen ob E-Mail schon existiert
+    const checkRes=await fetch(SUPABASE_URL+'/rest/v1/customers?email=eq.'+encodeURIComponent(fd.email)+'&select=id,tags',{headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY}});
+    const existing=await checkRes.json();
+    let cid;
 
-    // Upsert preferences
-    const pr=await fetch(SUPABASE_URL+'/rest/v1/customer_preferences?customer_id=eq.'+cid,{
-      method:'GET',headers:h});
-    const existing=await pr.json();
-    const prefMethod=existing&&existing.length?'PATCH':'POST';
-    const prefUrl=SUPABASE_URL+'/rest/v1/customer_preferences'+(existing&&existing.length?'?customer_id=eq.'+cid:'');
-    await fetch(prefUrl,{
-      method:prefMethod,headers:h,
-      body:JSON.stringify({
-        customer_id:cid,
-        preferred_brands:fd.tournament_winner?[fd.tournament_winner]:[],
-        preferred_colors:fd.selected_colors,
-        color_type:fd.color_type||null,
-        color_count:fd.color_count||null,
-        preferred_textures:fd.textures.length?fd.textures:null,
-        updated_at:new Date().toISOString()
-      })});
+    if(existing&&existing.length){
+      // Kunde existiert → PATCH, Tags mergen
+      cid=existing[0].id;
+      const mergedTags=[...new Set([...(existing[0].tags||[]),'Styleberatung','Email'])];
+      const patch={tags:mergedTags,updated_at:new Date().toISOString()};
+      if(fd.first_name)patch.first_name=fd.first_name;
+      if(fd.last_name)patch.last_name=fd.last_name;
+      if(fd.phone)patch.phone=fd.phone;
+      if(fd.birthday)patch.birthday=fd.birthday;
+      if(fd.newsletter)patch.is_newsletter=true;
+      await fetch(SUPABASE_URL+'/rest/v1/customers?id=eq.'+cid,{method:'PATCH',headers:h,body:JSON.stringify(patch)});
+    }else{
+      // Neuer Kunde → POST
+      const cr=await fetch(SUPABASE_URL+'/rest/v1/customers',{method:'POST',headers:h,
+        body:JSON.stringify({
+          first_name:fd.first_name||null,last_name:fd.last_name||null,
+          email:fd.email||null,phone:fd.phone||null,birthday:fd.birthday||null,
+          is_newsletter:fd.newsletter,tags:['Styleberatung','Email'],
+          source:['moosbruggern'],is_active:true,vip_tier:'standard',
+          purchase_count:0,lifetime_value:0,
+          updated_at:new Date().toISOString()
+        })});
+      if(!cr.ok)throw new Error(await cr.text());
+      const cd=await cr.json();
+      cid=cd[0]?.id;
+      if(!cid)throw new Error('Keine Kunden-ID erhalten');
+    }
+
+    // 2) Präferenzen speichern
+    const pr=await fetch(SUPABASE_URL+'/rest/v1/customer_preferences?customer_id=eq.'+cid,{headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY}});
+    const existingPref=await pr.json();
+    const prefMethod=existingPref&&existingPref.length?'PATCH':'POST';
+    const prefUrl=SUPABASE_URL+'/rest/v1/customer_preferences'+(existingPref&&existingPref.length?'?customer_id=eq.'+cid:'');
+    await fetch(prefUrl,{method:prefMethod,headers:h,body:JSON.stringify({
+      customer_id:cid,
+      preferred_brands:fd.tournament_winner?[fd.tournament_winner]:[],
+      preferred_colors:fd.selected_colors,
+      color_type:fd.color_type||null,
+      color_count:fd.color_count||null,
+      preferred_textures:fd.textures.length?fd.textures:null,
+      updated_at:new Date().toISOString()
+    })});
     goTo(6);
   }catch(e){
     console.error(e);
