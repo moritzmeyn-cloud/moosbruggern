@@ -345,7 +345,7 @@ function renderMatch(){
   document.getElementById('t-match').textContent=`Wer spricht Sie mehr an?`;
   document.getElementById('t-fill').style.width=(tPlayed/tTotal*100)+'%';
   // Left = current champion, Right = challenger
-  document.getElementById('t-a').innerHTML=`<span style="font-size:10px;display:block;color:var(--red);margin-bottom:4px;">TITELHALTER</span>${tChampion}`;
+  document.getElementById('t-a').textContent=tChampion;
   document.getElementById('t-b').textContent=challenger;
 }
 
