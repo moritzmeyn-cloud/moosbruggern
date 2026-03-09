@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Moosbrugger'n – Ihre persönliche Styleberatung</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-tap-highlight-color:transparent;}
+:root{--red:#e53935;--black:#0a0a0a;--white:#fff;--gray:#f5f5f5;--gray2:#e8e8e8;--gray3:#999;}
+html,body{min-height:100%;background:var(--white);}
+
+/* PROGRESS */
+.progress-bar{position:fixed;top:0;left:0;right:0;height:3px;background:var(--gray2);z-index:100;}
+.progress-fill{height:100%;background:var(--red);transition:width .4s ease;}
+
+/* SCREENS */
+.screen{display:none;min-height:100vh;}
+.screen.active{display:block;}
+.inner{max-width:460px;margin:0 auto;padding:28px 24px 60px;}
+
+/* WELCOME */
+.welcome{background:var(--black);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 32px;text-align:center;}
+.w-m{font-size:56px;font-weight:900;color:var(--white);letter-spacing:-.03em;line-height:1;}
+.w-m span{color:var(--red);}
+.w-name{font-size:13px;font-weight:600;color:rgba(255,255,255,.4);letter-spacing:.18em;text-transform:uppercase;margin-top:6px;margin-bottom:32px;}
+.w-title{font-size:24px;font-weight:700;color:var(--white);margin-bottom:12px;}
+.w-text{font-size:15px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:44px;max-width:280px;}
+.w-btn{background:var(--red);color:var(--white);border:none;border-radius:14px;padding:17px 48px;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.01em;transition:opacity .15s;}
+.w-btn:hover{opacity:.88;}
+.w-time{font-size:12px;color:rgba(255,255,255,.25);margin-top:16px;}
+
+/* STEP CHROME */
+.step-tag{font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;margin-top:4px;}
+.step-title{font-size:23px;font-weight:800;line-height:1.15;margin-bottom:8px;color:var(--black);}
+.step-sub{font-size:14px;color:var(--gray3);line-height:1.6;margin-bottom:24px;}
+
+/* FORM FIELDS */
+.field{margin-bottom:13px;}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--gray3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.field input,.field select{width:100%;padding:13px 14px;border:1.5px solid var(--gray2);border-radius:11px;font-size:15px;outline:none;background:var(--white);transition:border-color .15s;-webkit-appearance:none;color:var(--black);}
+.field input:focus,.field select:focus{border-color:var(--black);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--gray2);margin-top:4px;}
+.toggle-label{font-size:14px;font-weight:600;color:var(--black);}
+.toggle-hint{font-size:12px;color:var(--gray3);margin-top:3px;}
+.toggle{position:relative;width:46px;height:27px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:var(--gray2);border-radius:14px;cursor:pointer;transition:.2s;}
+.toggle input:checked+.toggle-slider{background:var(--black);}
+.toggle-slider:before{content:'';position:absolute;width:21px;height:21px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.toggle input:checked+.toggle-slider:before{transform:translateX(19px);}
+
+/* BUTTONS */
+.btn-next{background:var(--black);color:var(--white);border:none;border-radius:13px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;width:100%;margin-top:16px;transition:opacity .15s;}
+.btn-next:hover{opacity:.85;}
+.btn-next:disabled{opacity:.4;cursor:default;}
+.btn-back{background:none;border:none;font-size:14px;color:var(--gray3);cursor:pointer;padding:14px 0 0;display:block;text-align:center;width:100%;}
+.btn-back:hover{color:var(--black);}
+
+/* TOURNAMENT */
+.t-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.t-round-label{font-size:12px;color:var(--gray3);font-weight:500;}
+.t-match-label{font-size:12px;color:var(--gray3);}
+.t-bar{height:3px;background:var(--gray2);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+.t-bar-fill{height:100%;background:var(--red);transition:width .35s ease;}
+.t-vs{display:grid;grid-template-columns:1fr 40px 1fr;gap:8px;align-items:center;}
+.vs-lbl{font-size:11px;font-weight:800;color:var(--gray3);text-align:center;letter-spacing:.05em;}
+.brand-btn{padding:24px 14px;border:1.5px solid var(--gray2);border-radius:16px;background:var(--white);cursor:pointer;text-align:center;font-size:14px;font-weight:700;line-height:1.35;min-height:90px;display:flex;align-items:center;justify-content:center;transition:all .15s;color:var(--black);}
+.brand-btn:hover{border-color:var(--black);background:var(--gray);}
+.brand-btn:active{transform:scale(.96);background:var(--black);color:var(--white);border-color:var(--black);}
+
+/* COLOR PALETTE */
+.color-group{margin-bottom:20px;}
+.color-group-label{font-size:11px;font-weight:700;color:var(--gray3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+.color-swatches{display:flex;flex-wrap:wrap;gap:10px;}
+.swatch{width:40px;height:40px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:all .18s;position:relative;flex-shrink:0;}
+.swatch:hover{transform:scale(1.08);}
+.swatch.sel{border-color:var(--black);transform:scale(1.15);}
+.swatch.sel::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:rgba(0,0,0,.55);}
+.swatch.sel.dark-swatch::after{color:rgba(255,255,255,.75);}
+.swatch.light-border{box-shadow:inset 0 0 0 1px #ddd;}
+
+.count-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px;}
+.count-btn{padding:18px 8px;border:1.5px solid var(--gray2);border-radius:13px;text-align:center;cursor:pointer;transition:all .15s;background:var(--white);}
+.count-btn:hover{border-color:#aaa;}
+.count-btn.sel{border-color:var(--black);background:var(--black);color:var(--white);}
+.count-num{font-size:26px;font-weight:800;display:block;}
+.count-lbl{font-size:11px;margin-top:4px;opacity:.65;}
+
+/* FARBTYP */
+.farb-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.farb-btn{padding:18px 14px;border:1.5px solid var(--gray2);border-radius:16px;cursor:pointer;transition:all .15s;background:var(--white);text-align:left;}
+.farb-btn:hover{border-color:#aaa;}
+.farb-btn.sel{border-color:var(--black);background:var(--black);color:var(--white);}
+.farb-emoji{font-size:26px;display:block;margin-bottom:10px;}
+.farb-name{font-size:14px;font-weight:700;display:block;margin-bottom:3px;}
+.farb-desc{font-size:11px;opacity:.55;line-height:1.45;}
+
+/* TEXTURES */
+.texture-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.texture-btn{padding:16px 14px;border:1.5px solid var(--gray2);border-radius:16px;cursor:pointer;transition:all .15s;background:var(--white);display:flex;align-items:center;gap:12px;}
+.texture-btn:hover{border-color:#aaa;}
+.texture-btn.sel{border-color:var(--black);background:var(--black);color:var(--white);}
+.texture-icon{font-size:22px;flex-shrink:0;}
+.texture-name{font-size:14px;font-weight:700;}
+
+/* DONE */
+.done{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:60px 32px;background:var(--black);}
+.done-m{font-size:48px;font-weight:900;color:var(--white);margin-bottom:4px;}
+.done-m span{color:var(--red);}
+.done-check{font-size:52px;margin-bottom:24px;}
+.done-title{font-size:24px;font-weight:800;color:var(--white);margin-bottom:14px;}
+.done-text{font-size:15px;color:rgba(255,255,255,.5);line-height:1.7;max-width:280px;}
+.done-foot{margin-top:48px;font-size:12px;color:rgba(255,255,255,.2);letter-spacing:.06em;text-transform:uppercase;}
+
+/* SECTION DIVIDER */
+.section-label{font-size:12px;font-weight:700;color:var(--black);margin:22px 0 10px;padding-top:4px;border-top:1px solid var(--gray2);}
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+
+<!-- S0: WELCOME -->
+<div class="screen active" id="s0">
+  <div class="welcome">
+    <div class="w-m">M<span>.</span></div>
+    <div class="w-name">Moosbrugger · Gmund am Tegernsee</div>
+    <div class="w-title">Moosbrugger'n</div>
+    <div class="w-text">Ihre persönliche Styleberatung — damit wir bei Ihrem nächsten Besuch genau wissen, was Sie begeistert.</div>
+    <button class="w-btn" onclick="goTo(1)">Jetzt starten →</button>
+    <div class="w-time">Ca. 3 Minuten</div>
+  </div>
+</div>
+
+<!-- S1: BASICS -->
+<div class="screen" id="s1">
+  <div class="inner">
+    <div class="step-tag">Schritt 1 von 5</div>
+    <div class="step-title">Über Sie</div>
+    <div class="step-sub">Damit wir Sie beim nächsten Besuch persönlich begrüßen können.</div>
+    <div class="field-row">
+      <div class="field"><label>Vorname *</label><input id="f-first" type="text" placeholder="Marie" autocomplete="given-name"></div>
+      <div class="field"><label>Nachname</label><input id="f-last" type="text" placeholder="Müller" autocomplete="family-name"></div>
+    </div>
+    <div class="field"><label>E-Mail *</label><input id="f-email" type="email" placeholder="marie@beispiel.de" autocomplete="email" inputmode="email"></div>
+    <div class="field"><label>Telefon</label><input id="f-phone" type="tel" placeholder="+49 ..." autocomplete="tel" inputmode="tel"></div>
+    <div class="field"><label>Geburtsdatum</label><input id="f-birthday" type="date"></div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Newsletter</div>
+        <div class="toggle-hint">Exklusive Vorschauen &amp; Neuheiten per E-Mail</div>
+      </div>
+      <label class="toggle"><input type="checkbox" id="f-newsletter" checked><span class="toggle-slider"></span></label>
+    </div>
+    <button class="btn-next" onclick="nextFromBasics()">Weiter →</button>
+  </div>
+</div>
+
+<!-- S2: TOURNAMENT -->
+<div class="screen" id="s2">
+  <div class="inner">
+    <div class="step-tag">Schritt 2 von 5</div>
+    <div class="step-title">Ihr Marken-Geschmack</div>
+    <div class="step-sub">Welche Marke spricht Sie mehr an? Einfach antippen — am Ende bleibt Ihr persönlicher Favorit.</div>
+    <div class="t-meta">
+      <span class="t-round-label" id="t-round">Runde 1 von 4</span>
+      <span class="t-match-label" id="t-match"></span>
+    </div>
+    <div class="t-bar"><div class="t-bar-fill" id="t-fill" style="width:0%"></div></div>
+    <div class="t-vs">
+      <button class="brand-btn" id="t-a" onclick="pickBrand(0)"></button>
+      <div class="vs-lbl">VS</div>
+      <button class="brand-btn" id="t-b" onclick="pickBrand(1)"></button>
+    </div>
+    <button class="btn-back" onclick="goTo(1)">← Zurück</button>
+  </div>
+</div>
+
+<!-- S3: COLORS -->
+<div class="screen" id="s3">
+  <div class="inner">
+    <div class="step-tag">Schritt 3 von 5</div>
+    <div class="step-title">Ihre Farbwelt</div>
+    <div class="step-sub">Welche Farben tragen Sie gerne? Mehrere Antworten möglich.</div>
+    <div id="color-palette"></div>
+    <div class="section-label">Wie viele Farben kombinieren Sie in einem Outfit?</div>
+    <div class="count-options">
+      <div class="count-btn" onclick="selectCount(1,this)"><span class="count-num">1</span><span class="count-lbl">Monochrom</span></div>
+      <div class="count-btn" onclick="selectCount(2,this)"><span class="count-num">2</span><span class="count-lbl">Klassisch</span></div>
+      <div class="count-btn" onclick="selectCount(3,this)"><span class="count-num">3+</span><span class="count-lbl">Farbenfroh</span></div>
+    </div>
+    <button class="btn-next" onclick="nextFromColors()">Weiter →</button>
+    <button class="btn-back" onclick="goTo(2)">← Zurück</button>
+  </div>
+</div>
+
+<!-- S4: FARBTYP -->
+<div class="screen" id="s4">
+  <div class="inner">
+    <div class="step-tag">Schritt 4 von 5</div>
+    <div class="step-title">Ihr Farbtyp</div>
+    <div class="step-sub">Welcher Typ beschreibt Sie am besten?</div>
+    <div class="farb-grid">
+      <div class="farb-btn" onclick="selectFarb('Frühlingstyp',this)">
+        <span class="farb-emoji">🌸</span>
+        <span class="farb-name">Frühlingstyp</span>
+        <span class="farb-desc">Warm, hell &amp; golden — strahlend und leicht</span>
+      </div>
+      <div class="farb-btn" onclick="selectFarb('Sommertyp',this)">
+        <span class="farb-emoji">❄️</span>
+        <span class="farb-name">Sommertyp</span>
+        <span class="farb-desc">Kühl, weich &amp; rosig — zart und harmonisch</span>
+      </div>
+      <div class="farb-btn" onclick="selectFarb('Herbsttyp',this)">
+        <span class="farb-emoji">🍂</span>
+        <span class="farb-name">Herbsttyp</span>
+        <span class="farb-desc">Warm, tief &amp; erdig — satt und ausdrucksstark</span>
+      </div>
+      <div class="farb-btn" onclick="selectFarb('Wintertyp',this)">
+        <span class="farb-emoji">🖤</span>
+        <span class="farb-name">Wintertyp</span>
+        <span class="farb-desc">Kühl, kontrastreich &amp; klar — präzise und stark</span>
+      </div>
+    </div>
+    <button class="btn-next" onclick="nextFromFarb()">Weiter →</button>
+    <button class="btn-back" onclick="goTo(3)">← Zurück</button>
+  </div>
+</div>
+
+<!-- S5: TEXTUREN -->
+<div class="screen" id="s5">
+  <div class="inner">
+    <div class="step-tag">Schritt 5 von 5</div>
+    <div class="step-title">Ihre Lieblingstexturen</div>
+    <div class="step-sub">Was tragen Sie am liebsten auf der Haut? Mehrere Antworten möglich.</div>
+    <div class="texture-grid">
+      <div class="texture-btn" onclick="toggleTexture('Samt',this)"><span class="texture-icon">🟫</span><span class="texture-name">Samt</span></div>
+      <div class="texture-btn" onclick="toggleTexture('Seide',this)"><span class="texture-icon">✨</span><span class="texture-name">Seide</span></div>
+      <div class="texture-btn" onclick="toggleTexture('Baumwolle',this)"><span class="texture-icon">🌿</span><span class="texture-name">Baumwolle</span></div>
+      <div class="texture-btn" onclick="toggleTexture('Wolle',this)"><span class="texture-icon">🐑</span><span class="texture-name">Wolle</span></div>
+      <div class="texture-btn" onclick="toggleTexture('Cashmere',this)"><span class="texture-icon">☁️</span><span class="texture-name">Cashmere</span></div>
+      <div class="texture-btn" onclick="toggleTexture('Satin',this)"><span class="texture-icon">💫</span><span class="texture-name">Satin</span></div>
+      <div class="texture-btn" onclick="toggleTexture('Viskose',this)"><span class="texture-icon">🌊</span><span class="texture-name">Viskose</span></div>
+    </div>
+    <button class="btn-next" id="submit-btn" onclick="submitForm()">Profil speichern ✓</button>
+    <button class="btn-back" onclick="goTo(4)">← Zurück</button>
+  </div>
+</div>
+
+<!-- S6: DONE -->
+<div class="screen" id="s6">
+  <div class="done">
+    <div class="done-m">M<span>.</span></div>
+    <div class="done-check">✓</div>
+    <div class="done-title">Herzlichen Dank!</div>
+    <div class="done-text">Ihr persönliches Stilprofil ist angelegt. Wir freuen uns darauf, Sie beim nächsten Besuch noch besser beraten zu können.</div>
+    <div class="done-foot">Moosbrugger · Gmund am Tegernsee</div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://qimjxffdbsrvcbezydwo.supabase.co';
+const ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbWp4ZmZkYnNydmNiZXp5ZHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMzI4NTgsImV4cCI6MjA4NzcwODg1OH0.CKb27aRk1fqV0XTMz8L6iT9fJGUj-NdC83aK1Z0tbAk';
+
+// ── BRANDS (16 bekannteste) ───────────────────────────────────────
+const BRANDS=['Diane Von Furstenberg','Golden Goose','Wolford','Vilebrequin',
+  'Ulla Johnson','Frame','Veronica Beard','Stand Studio',
+  'Rotate Birger Christensen','C.P. Company','Iris Von Arnim','Aspesi',
+  'La Doublej','Blazé Milano','Odeeh','Vince'];
+
+// ── COLORS ───────────────────────────────────────────────────────
+const COLOR_GROUPS=[
+  {label:'Neutral',colors:[
+    {hex:'#FFFFFF',name:'Weiß',light:true},{hex:'#F5F0EB',name:'Creme',light:true},
+    {hex:'#D4C5B0',name:'Sand'},{hex:'#C8A882',name:'Camel'},
+    {hex:'#6B6B6B',name:'Grau',dark:true},{hex:'#1A1A1A',name:'Schwarz',dark:true}]},
+  {label:'Erdtöne',colors:[
+    {hex:'#8B4513',name:'Schokolade',dark:true},{hex:'#C0623B',name:'Rost',dark:true},
+    {hex:'#D4A056',name:'Terrakotta'},{hex:'#7A8C5A',name:'Olive',dark:true},
+    {hex:'#9DB88A',name:'Salbei'}]},
+  {label:'Kühle Töne',colors:[
+    {hex:'#1B3A5C',name:'Navy',dark:true},{hex:'#2E5F8A',name:'Kobalt',dark:true},
+    {hex:'#5B9BD5',name:'Himmelblau'},{hex:'#4A9DA8',name:'Petrol',dark:true},
+    {hex:'#8A1C2C',name:'Burgund',dark:true}]},
+  {label:'Warme Töne',colors:[
+    {hex:'#C0392B',name:'Rot',dark:true},{hex:'#D4603A',name:'Orange',dark:true},
+    {hex:'#E8B84B',name:'Senf'},{hex:'#E8D44D',name:'Gelb'},{hex:'#D4A0B0',name:'Altrosa'}]},
+  {label:'Pastell',colors:[
+    {hex:'#F4C2C2',name:'Rosé'},{hex:'#C8B8D4',name:'Lavendel'},
+    {hex:'#B8D4C0',name:'Mint'},{hex:'#B8D0E8',name:'Puderblau'},{hex:'#F4DCC8',name:'Pfirsich'}]}
+];
+
+// ── STATE ────────────────────────────────────────────────────────
+let step=0;
+let fd={first_name:'',last_name:'',email:'',phone:'',birthday:'',newsletter:true,
+  tournament_winner:'',selected_colors:[],color_count:null,color_type:'',textures:[]};
+
+// Tournament (King of the Hill)
+let tQueue=[],tChampion='',tPlayed=0,tTotal=0;
+
+// ── NAV ──────────────────────────────────────────────────────────
+function goTo(n){
+  document.getElementById('s'+step).classList.remove('active');
+  step=n;
+  document.getElementById('s'+n).classList.add('active');
+  window.scrollTo(0,0);
+  const pct=[0,14,32,54,72,88,100][n]||0;
+  document.getElementById('progress').style.width=pct+'%';
+}
+
+// ── STEP 1 ───────────────────────────────────────────────────────
+function nextFromBasics(){
+  const first=document.getElementById('f-first').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  if(!first){alert('Bitte geben Sie Ihren Vornamen ein.');return;}
+  if(!email||!email.includes('@')){alert('Bitte geben Sie eine gültige E-Mail-Adresse ein.');return;}
+  fd.first_name=first;
+  fd.last_name=document.getElementById('f-last').value.trim();
+  fd.email=email;
+  fd.phone=document.getElementById('f-phone').value.trim();
+  fd.birthday=document.getElementById('f-birthday').value||null;
+  fd.newsletter=document.getElementById('f-newsletter').checked;
+  initTournament();
+  goTo(2);
+}
+
+// ── TOURNAMENT (King of the Hill) ────────────────────────────────
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+function initTournament(){
+  const shuffled=shuffle([...BRANDS]);
+  tChampion=shuffled[0];
+  tQueue=shuffled.slice(1);   // remaining challengers
+  tPlayed=0;tTotal=BRANDS.length-1;
+  renderMatch();
+}
+
+function renderMatch(){
+  const challenger=tQueue[0];
+  document.getElementById('t-round').textContent=`Duell ${tPlayed+1} von ${tTotal}`;
+  document.getElementById('t-match').textContent=`Wer spricht Sie mehr an?`;
+  document.getElementById('t-fill').style.width=(tPlayed/tTotal*100)+'%';
+  // Left = current champion, Right = challenger
+  document.getElementById('t-a').innerHTML=`<span style="font-size:10px;display:block;color:var(--red);margin-bottom:4px;">TITELHALTER</span>${tChampion}`;
+  document.getElementById('t-b').textContent=challenger;
+}
+
+function pickBrand(idx){
+  const challenger=tQueue[0];
+  // idx 0 = champion wins, idx 1 = challenger wins
+  if(idx===1) tChampion=challenger;   // challenger becomes new champion
+  tQueue=tQueue.slice(1);
+  tPlayed++;
+  if(tQueue.length===0){
+    // Tournament over
+    fd.tournament_winner=tChampion;
+    buildColorPalette();
+    goTo(3);return;
+  }
+  renderMatch();
+}
+
+// ── COLORS ───────────────────────────────────────────────────────
+function buildColorPalette(){
+  document.getElementById('color-palette').innerHTML=COLOR_GROUPS.map(g=>`
+    <div class="color-group">
+      <div class="color-group-label">${g.label}</div>
+      <div class="color-swatches">
+        ${g.colors.map(c=>`<div class="swatch${c.dark?' dark-swatch':''}${c.light?' light-border':''}"
+          style="background:${c.hex}" title="${c.name}"
+          onclick="toggleColor('${c.name}',this)"></div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function toggleColor(name,el){
+  el.classList.toggle('sel');
+  if(el.classList.contains('sel'))fd.selected_colors.push(name);
+  else fd.selected_colors=fd.selected_colors.filter(c=>c!==name);
+}
+
+function selectCount(n,el){
+  document.querySelectorAll('.count-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');fd.color_count=n;
+}
+
+function nextFromColors(){
+  if(!fd.color_count){alert('Bitte wählen Sie, wie viele Farben Sie kombinieren.');return;}
+  goTo(4);
+}
+
+// ── FARBTYP ──────────────────────────────────────────────────────
+function selectFarb(type,el){
+  document.querySelectorAll('.farb-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');fd.color_type=type;
+}
+
+function nextFromFarb(){
+  if(!fd.color_type){alert('Bitte wählen Sie Ihren Farbtyp.');return;}
+  goTo(5);
+}
+
+// ── TEXTUREN ─────────────────────────────────────────────────────
+function toggleTexture(name,el){
+  el.classList.toggle('sel');
+  if(el.classList.contains('sel'))fd.textures.push(name);
+  else fd.textures=fd.textures.filter(t=>t!==name);
+}
+
+// ── SUBMIT ───────────────────────────────────────────────────────
+async function submitForm(){
+  const btn=document.getElementById('submit-btn');
+  btn.textContent='Wird gespeichert…';btn.disabled=true;
+  const h={'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY,
+    'Content-Type':'application/json','Prefer':'return=representation'};
+  const hUpsert={'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY,
+    'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=representation'};
+  try{
+    // Upsert customer — wenn E-Mail schon existiert, Daten aktualisieren
+    const cr=await fetch(SUPABASE_URL+'/rest/v1/customers',{
+      method:'POST',headers:hUpsert,
+      body:JSON.stringify({
+        first_name:fd.first_name||null,last_name:fd.last_name||null,
+        email:fd.email||null,phone:fd.phone||null,birthday:fd.birthday||null,
+        is_newsletter:fd.newsletter,tags:['Styleberatung'],
+        updated_at:new Date().toISOString()
+      })});
+    if(!cr.ok)throw new Error(await cr.text());
+    const cd=await cr.json();
+    const cid=cd[0]?.id;
+    if(!cid)throw new Error('Keine Kunden-ID erhalten');
+
+    // Upsert preferences
+    const pr=await fetch(SUPABASE_URL+'/rest/v1/customer_preferences?customer_id=eq.'+cid,{
+      method:'GET',headers:h});
+    const existing=await pr.json();
+    const prefMethod=existing&&existing.length?'PATCH':'POST';
+    const prefUrl=SUPABASE_URL+'/rest/v1/customer_preferences'+(existing&&existing.length?'?customer_id=eq.'+cid:'');
+    await fetch(prefUrl,{
+      method:prefMethod,headers:h,
+      body:JSON.stringify({
+        customer_id:cid,
+        preferred_brands:fd.tournament_winner?[fd.tournament_winner]:[],
+        preferred_colors:fd.selected_colors,
+        color_type:fd.color_type||null,
+        color_count:fd.color_count||null,
+        preferred_textures:fd.textures.length?fd.textures:null,
+        updated_at:new Date().toISOString()
+      })});
+    goTo(6);
+  }catch(e){
+    console.error(e);
+    btn.textContent='Profil speichern ✓';btn.disabled=false;
+    alert('Fehler beim Speichern. Bitte versuchen Sie es erneut.\n\n'+e.message);
+  }
+}
+
+// Init
+buildColorPalette();
+</script>
+</body>
+</html>
