@@ -421,7 +421,7 @@ async function submitForm(){
     'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=representation'};
   try{
     // Upsert customer — wenn E-Mail schon existiert, Daten aktualisieren
-    const cr=await fetch(SUPABASE_URL+'/rest/v1/customers',{
+    const cr=await fetch(SUPABASE_URL+'/rest/v1/customers?on_conflict=email',{
       method:'POST',headers:hUpsert,
       body:JSON.stringify({
         first_name:fd.first_name||null,last_name:fd.last_name||null,
