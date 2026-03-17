@@ -59,6 +59,8 @@ html,body{min-height:100%;background:var(--white);}
 .btn-next:disabled{opacity:.4;cursor:default;}
 .btn-back{background:none;border:none;font-size:14px;color:var(--gray3);cursor:pointer;padding:14px 0 0;display:block;text-align:center;width:100%;}
 .btn-back:hover{color:var(--black);}
+.btn-skip{background:none;border:none;font-size:12px;color:#bbb;cursor:pointer;padding:10px 0 2px;display:block;text-align:center;width:100%;letter-spacing:.02em;}
+.btn-skip:hover{color:var(--gray3);}
 
 /* TOURNAMENT */
 .t-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
@@ -138,10 +140,10 @@ html,body{min-height:100%;background:var(--white);}
 .pin-dot.filled{background:var(--white);border-color:var(--white);}
 .pin-dot.error{background:var(--red);border-color:var(--red);}
 .pin-pad{display:grid;grid-template-columns:repeat(3,72px);grid-template-rows:repeat(4,72px);gap:12px;justify-content:center;}
-.pin-key{width:72px;height:72px;border-radius:50%;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:var(--white);font-size:22px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;-webkit-user-select:none;user-select:none;}
+.pin-key{width:72px;height:72px;border-radius:50%;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:var(--white);font-size:22px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;-webkit-user-select:none;user-select:none;-webkit-appearance:none;appearance:none;outline:none;padding:0;font-family:inherit;-webkit-tap-highlight-color:rgba(255,255,255,.15);}
 .pin-key:active,.pin-key.pressed{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);}
 .pin-key.del{font-size:18px;color:rgba(255,255,255,.5);}
-.pin-key.empty{visibility:hidden;cursor:default;}
+.pin-key.empty{visibility:hidden;cursor:default;pointer-events:none;}
 .pin-error-msg{font-size:13px;color:var(--red);margin-top:16px;min-height:20px;font-weight:600;}
 </style>
 </head>
@@ -159,18 +161,18 @@ html,body{min-height:100%;background:var(--white);}
     <div class="pin-dot" id="pd3"></div>
   </div>
   <div class="pin-pad">
-    <div class="pin-key" onclick="pinKey('1')">1</div>
-    <div class="pin-key" onclick="pinKey('2')">2</div>
-    <div class="pin-key" onclick="pinKey('3')">3</div>
-    <div class="pin-key" onclick="pinKey('4')">4</div>
-    <div class="pin-key" onclick="pinKey('5')">5</div>
-    <div class="pin-key" onclick="pinKey('6')">6</div>
-    <div class="pin-key" onclick="pinKey('7')">7</div>
-    <div class="pin-key" onclick="pinKey('8')">8</div>
-    <div class="pin-key" onclick="pinKey('9')">9</div>
+    <button class="pin-key" onclick="pinKey('1')" type="button">1</button>
+    <button class="pin-key" onclick="pinKey('2')" type="button">2</button>
+    <button class="pin-key" onclick="pinKey('3')" type="button">3</button>
+    <button class="pin-key" onclick="pinKey('4')" type="button">4</button>
+    <button class="pin-key" onclick="pinKey('5')" type="button">5</button>
+    <button class="pin-key" onclick="pinKey('6')" type="button">6</button>
+    <button class="pin-key" onclick="pinKey('7')" type="button">7</button>
+    <button class="pin-key" onclick="pinKey('8')" type="button">8</button>
+    <button class="pin-key" onclick="pinKey('9')" type="button">9</button>
     <div class="pin-key empty"></div>
-    <div class="pin-key" onclick="pinKey('0')">0</div>
-    <div class="pin-key del" onclick="pinDel()">⌫</div>
+    <button class="pin-key" onclick="pinKey('0')" type="button">0</button>
+    <button class="pin-key del" onclick="pinDel()" type="button">⌫</button>
   </div>
   <div class="pin-error-msg" id="pin-error"></div>
 </div>
@@ -231,6 +233,7 @@ html,body{min-height:100%;background:var(--white);}
       <button class="brand-btn" id="t-b" onclick="pickBrand(1)"></button>
     </div>
     <button class="btn-back" onclick="goTo(1)">← Zurück</button>
+    <button class="btn-skip" onclick="skipStep(3)">Diesen Schritt überspringen</button>
   </div>
 </div>
 
@@ -250,6 +253,7 @@ html,body{min-height:100%;background:var(--white);}
     </div>
     <button class="btn-next" onclick="nextFromColors()">Weiter →</button>
     <button class="btn-back" onclick="goTo(2)">← Zurück</button>
+    <button class="btn-skip" onclick="skipStep(4)">Diesen Schritt überspringen</button>
   </div>
 </div>
 
@@ -284,6 +288,7 @@ html,body{min-height:100%;background:var(--white);}
     </div>
     <button class="btn-next" onclick="nextFromFarb()">Weiter →</button>
     <button class="btn-back" onclick="goTo(3)">← Zurück</button>
+    <button class="btn-skip" onclick="skipStep(5)">Diesen Schritt überspringen</button>
   </div>
 </div>
 
@@ -305,6 +310,7 @@ html,body{min-height:100%;background:var(--white);}
     </div>
     <button class="btn-next" id="submit-btn" onclick="submitForm()">Profil speichern ✓</button>
     <button class="btn-back" onclick="goTo(4)">← Zurück</button>
+    <button class="btn-skip" onclick="submitForm()">Ohne Texturauswahl speichern</button>
   </div>
 </div>
 
@@ -432,6 +438,19 @@ function clearError(id){
   if(el){el.textContent='';el.classList.remove('visible');}
 }
 
+// ── SKIP ─────────────────────────────────────────────────────────
+function skipStep(to){
+  // Wenn Tournament übersprungen: Farbpalette trotzdem aufbauen
+  if(to===3 && !document.getElementById('color-palette').innerHTML){
+    fd.tournament_winner='';
+    buildColorPalette();
+  }
+  // Aktuelle Fehler wegräumen
+  const errEl=document.getElementById('s'+step+'-error');
+  if(errEl){errEl.textContent='';errEl.classList.remove('visible');}
+  goTo(to);
+}
+
 // ── STEP 1 ───────────────────────────────────────────────────────
 function nextFromBasics(){
   clearError('s1-error');
@@ -540,23 +559,27 @@ async function submitForm(){
   btn.textContent='Wird gespeichert…';btn.disabled=true;
   const h={'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
   try{
-    // 1) Prüfen ob E-Mail schon existiert
-    const checkRes=await fetch(SUPABASE_URL+'/rest/v1/customers?email=eq.'+encodeURIComponent(fd.email)+'&select=id,tags',{headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY}});
+    // 1) Prüfen ob E-Mail schon existiert (alle relevanten Felder laden)
+    const checkRes=await fetch(SUPABASE_URL+'/rest/v1/customers?email=eq.'+encodeURIComponent(fd.email)+'&select=id,tags,first_name,last_name,phone,birthday,is_newsletter',{headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY}});
     const existing=await checkRes.json();
     let cid;
 
     if(existing&&existing.length){
-      // Kunde existiert → PATCH, Tags mergen
+      // Kunde existiert → nur leere Felder befüllen, Tags mergen
       cid=existing[0].id;
+      const ex=existing[0];
+      console.log('EXISTING CUSTOMER:', ex);
       const newTags=['Moosbruggert'];
       if(fd.newsletter)newTags.push('Newsletter');
-      const mergedTags=[...new Set([...(existing[0].tags||[]),...newTags])];
+      const mergedTags=[...new Set([...(ex.tags||[]),...newTags])];
       const patch={tags:mergedTags,updated_at:new Date().toISOString()};
+      // Eingetragene Felder aktualisieren, leere Felder behalten
       if(fd.first_name)patch.first_name=fd.first_name;
       if(fd.last_name)patch.last_name=fd.last_name;
       if(fd.phone)patch.phone=fd.phone;
       if(fd.birthday)patch.birthday=fd.birthday;
       if(fd.newsletter)patch.is_newsletter=true;
+      console.log('CUSTOMER PATCH:', patch);
       await fetch(SUPABASE_URL+'/rest/v1/customers?id=eq.'+cid,{method:'PATCH',headers:h,body:JSON.stringify(patch)});
     }else{
       // Neuer Kunde → POST
@@ -576,19 +599,31 @@ async function submitForm(){
     }
 
     // 2) Präferenzen speichern
-    const pr=await fetch(SUPABASE_URL+'/rest/v1/customer_preferences?customer_id=eq.'+cid,{headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY}});
+    const pr=await fetch(SUPABASE_URL+'/rest/v1/customer_preferences?customer_id=eq.'+cid+'&select=*',{headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY}});
     const existingPref=await pr.json();
-    const prefMethod=existingPref&&existingPref.length?'PATCH':'POST';
-    const prefUrl=SUPABASE_URL+'/rest/v1/customer_preferences'+(existingPref&&existingPref.length?'?customer_id=eq.'+cid:'');
-    await fetch(prefUrl,{method:prefMethod,headers:h,body:JSON.stringify({
-      customer_id:cid,
-      preferred_brands:fd.tournament_winner?[fd.tournament_winner]:[],
-      preferred_colors:fd.selected_colors,
-      color_type:fd.color_type||null,
-      color_count:fd.color_count||null,
-      preferred_textures:fd.textures.length?fd.textures:null,
-      updated_at:new Date().toISOString()
-    })});
+    const prefExists=existingPref&&existingPref.length;
+    const ep=prefExists?existingPref[0]:{};
+    console.log('EXISTING PREFS:', ep);
+    const prefMethod=prefExists?'PATCH':'POST';
+    const prefUrl=SUPABASE_URL+'/rest/v1/customer_preferences'+(prefExists?'?customer_id=eq.'+cid:'');
+    const prefData={customer_id:cid,updated_at:new Date().toISOString()};
+    if(!prefExists){
+      // Neuer Eintrag: alle Felder initialisieren
+      prefData.preferred_brands=fd.tournament_winner?[fd.tournament_winner]:[];
+      prefData.preferred_colors=fd.selected_colors;
+      prefData.color_type=fd.color_type||null;
+      prefData.color_count=fd.color_count||null;
+      prefData.preferred_textures=fd.textures.length?fd.textures:null;
+    }else{
+      // Bestehender Eintrag: ausgefüllte Schritte aktualisieren, übersprungene Schritte behalten
+      if(fd.tournament_winner)prefData.preferred_brands=[fd.tournament_winner];
+      if(fd.selected_colors.length)prefData.preferred_colors=fd.selected_colors;
+      if(fd.color_type)prefData.color_type=fd.color_type;
+      if(fd.color_count)prefData.color_count=fd.color_count;
+      if(fd.textures.length)prefData.preferred_textures=fd.textures;
+    }
+    console.log('PREF METHOD:', prefMethod, 'PREF DATA:', prefData);
+    await fetch(prefUrl,{method:prefMethod,headers:h,body:JSON.stringify(prefData)});
     goTo(6);
   }catch(e){
     console.error(e);
@@ -619,6 +654,10 @@ function resetForNextGuest(){
 
   // Reset textures
   document.querySelectorAll('.texture-btn.sel').forEach(el=>el.classList.remove('sel'));
+
+  // Reset submit button
+  const submitBtn=document.getElementById('submit-btn');
+  if(submitBtn){submitBtn.textContent='Profil speichern ✓';submitBtn.disabled=false;}
 
   // Clear errors
   ['s1-error','s3-error','s4-error','s5-error'].forEach(clearError);
