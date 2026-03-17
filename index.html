@@ -628,7 +628,7 @@ async function submitForm(){
   }catch(e){
     console.error(e);
     btn.textContent='Profil speichern ✓';btn.disabled=false;
-    showError('s5-error','Fehler beim Speichern – bitte erneut versuchen. ('+e.message+')');
+    showError('s5-error','Fehler beim Speichern – bitte erneut versuchen.');
   }
 }
 
