@@ -568,7 +568,7 @@ async function submitForm(){
       // Kunde existiert → nur leere Felder befüllen, Tags mergen
       cid=existing[0].id;
       const ex=existing[0];
-      console.log('EXISTING CUSTOMER:', ex);
+
       const newTags=['Moosbruggert'];
       if(fd.newsletter)newTags.push('Newsletter');
       const mergedTags=[...new Set([...(ex.tags||[]),...newTags])];
@@ -579,7 +579,7 @@ async function submitForm(){
       if(fd.phone)patch.phone=fd.phone;
       if(fd.birthday)patch.birthday=fd.birthday;
       if(fd.newsletter)patch.is_newsletter=true;
-      console.log('CUSTOMER PATCH:', patch);
+
       await fetch(SUPABASE_URL+'/rest/v1/customers?id=eq.'+cid,{method:'PATCH',headers:h,body:JSON.stringify(patch)});
     }else{
       // Neuer Kunde → POST
@@ -603,7 +603,7 @@ async function submitForm(){
     const existingPref=await pr.json();
     const prefExists=existingPref&&existingPref.length;
     const ep=prefExists?existingPref[0]:{};
-    console.log('EXISTING PREFS:', ep);
+
     const prefMethod=prefExists?'PATCH':'POST';
     const prefUrl=SUPABASE_URL+'/rest/v1/customer_preferences'+(prefExists?'?customer_id=eq.'+cid:'');
     const prefData={customer_id:cid,updated_at:new Date().toISOString()};
@@ -622,7 +622,7 @@ async function submitForm(){
       if(fd.color_count)prefData.color_count=fd.color_count;
       if(fd.textures.length)prefData.preferred_textures=fd.textures;
     }
-    console.log('PREF METHOD:', prefMethod, 'PREF DATA:', prefData);
+
     await fetch(prefUrl,{method:prefMethod,headers:h,body:JSON.stringify(prefData)});
     goTo(6);
   }catch(e){
