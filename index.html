@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Moosbrugger'n – Ihre persönliche Styleberatung</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-tap-highlight-color:transparent;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 :root{--red:#e53935;--black:#0a0a0a;--white:#fff;--gray:#f5f5f5;--gray2:#e8e8e8;--gray3:#999;}
 html,body{min-height:100%;background:var(--white);}
 
@@ -118,6 +118,14 @@ html,body{min-height:100%;background:var(--white);}
 
 /* SECTION DIVIDER */
 .section-label{font-size:12px;font-weight:700;color:var(--black);margin:22px 0 10px;padding-top:4px;border-top:1px solid var(--gray2);}
+
+/* INLINE ERROR */
+.form-error{background:#ffeaea;color:#c0392b;border-radius:10px;padding:12px 14px;font-size:14px;font-weight:600;margin-bottom:12px;display:none;}
+.form-error.visible{display:block;}
+
+/* NEXT GUEST BUTTON */
+.btn-next-guest{background:var(--red);color:var(--white);border:none;border-radius:13px;padding:15px 32px;font-size:16px;font-weight:700;cursor:pointer;margin-top:28px;transition:opacity .15s;}
+.btn-next-guest:hover{opacity:.85;}
 </style>
 </head>
 <body>
@@ -142,6 +150,7 @@ html,body{min-height:100%;background:var(--white);}
     <div class="step-tag">Schritt 1 von 5</div>
     <div class="step-title">Über Sie</div>
     <div class="step-sub">Damit wir Sie beim nächsten Besuch persönlich begrüßen können.</div>
+    <div class="form-error" id="s1-error"></div>
     <div class="field-row">
       <div class="field"><label>Vorname *</label><input id="f-first" type="text" placeholder="Marie" autocomplete="given-name"></div>
       <div class="field"><label>Nachname</label><input id="f-last" type="text" placeholder="Müller" autocomplete="family-name"></div>
@@ -186,6 +195,7 @@ html,body{min-height:100%;background:var(--white);}
     <div class="step-tag">Schritt 3 von 5</div>
     <div class="step-title">Ihre Farbwelt</div>
     <div class="step-sub">Welche Farben tragen Sie gerne? Mehrere Antworten möglich.</div>
+    <div class="form-error" id="s3-error"></div>
     <div id="color-palette"></div>
     <div class="section-label">Wie viele Farben kombinieren Sie in einem Outfit?</div>
     <div class="count-options">
@@ -204,6 +214,7 @@ html,body{min-height:100%;background:var(--white);}
     <div class="step-tag">Schritt 4 von 5</div>
     <div class="step-title">Ihr Farbtyp</div>
     <div class="step-sub">Welcher Typ beschreibt Sie am besten?</div>
+    <div class="form-error" id="s4-error"></div>
     <div class="farb-grid">
       <div class="farb-btn" onclick="selectFarb('Frühlingstyp',this)">
         <span class="farb-emoji">🌸</span>
@@ -237,6 +248,7 @@ html,body{min-height:100%;background:var(--white);}
     <div class="step-tag">Schritt 5 von 5</div>
     <div class="step-title">Ihre Lieblingstexturen</div>
     <div class="step-sub">Was tragen Sie am liebsten auf der Haut? Mehrere Antworten möglich.</div>
+    <div class="form-error" id="s5-error"></div>
     <div class="texture-grid">
       <div class="texture-btn" onclick="toggleTexture('Samt',this)"><span class="texture-icon">🟫</span><span class="texture-name">Samt</span></div>
       <div class="texture-btn" onclick="toggleTexture('Seide',this)"><span class="texture-icon">✨</span><span class="texture-name">Seide</span></div>
@@ -258,6 +270,7 @@ html,body{min-height:100%;background:var(--white);}
     <div class="done-check">✓</div>
     <div class="done-title">Herzlichen Dank!</div>
     <div class="done-text">Ihr persönliches Stilprofil ist angelegt. Wir freuen uns darauf, Sie beim nächsten Besuch noch besser beraten zu können.</div>
+    <button class="btn-next-guest" onclick="resetForNextGuest()">Nächster Gast →</button>
     <div class="done-foot">Moosbrugger · Rottach-Egern</div>
   </div>
 </div>
@@ -312,12 +325,25 @@ function goTo(n){
   document.getElementById('progress').style.width=pct+'%';
 }
 
+// ── INLINE ERROR ─────────────────────────────────────────────────
+function showError(id,msg){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.textContent=msg;el.classList.add('visible');
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function clearError(id){
+  const el=document.getElementById(id);
+  if(el){el.textContent='';el.classList.remove('visible');}
+}
+
 // ── STEP 1 ───────────────────────────────────────────────────────
 function nextFromBasics(){
+  clearError('s1-error');
   const first=document.getElementById('f-first').value.trim();
   const email=document.getElementById('f-email').value.trim();
-  if(!first){alert('Bitte geben Sie Ihren Vornamen ein.');return;}
-  if(!email||!email.includes('@')){alert('Bitte geben Sie eine gültige E-Mail-Adresse ein.');return;}
+  if(!first){showError('s1-error','Bitte geben Sie Ihren Vornamen ein.');return;}
+  if(!email||!email.includes('@')){showError('s1-error','Bitte geben Sie eine gültige E-Mail-Adresse ein.');return;}
   fd.first_name=first;
   fd.last_name=document.getElementById('f-last').value.trim();
   fd.email=email;
@@ -389,7 +415,8 @@ function selectCount(n,el){
 }
 
 function nextFromColors(){
-  if(!fd.color_count){alert('Bitte wählen Sie, wie viele Farben Sie kombinieren.');return;}
+  if(!fd.color_count){showError('s3-error','Bitte wählen Sie, wie viele Farben Sie kombinieren.');return;}
+  clearError('s3-error');
   goTo(4);
 }
 
@@ -400,7 +427,8 @@ function selectFarb(type,el){
 }
 
 function nextFromFarb(){
-  if(!fd.color_type){alert('Bitte wählen Sie Ihren Farbtyp.');return;}
+  if(!fd.color_type){showError('s4-error','Bitte wählen Sie Ihren Farbtyp.');return;}
+  clearError('s4-error');
   goTo(5);
 }
 
@@ -425,7 +453,9 @@ async function submitForm(){
     if(existing&&existing.length){
       // Kunde existiert → PATCH, Tags mergen
       cid=existing[0].id;
-      const mergedTags=[...new Set([...(existing[0].tags||[]),'Styleberatung','Email'])];
+      const newTags=['Moosbruggert'];
+      if(fd.newsletter)newTags.push('Newsletter');
+      const mergedTags=[...new Set([...(existing[0].tags||[]),...newTags])];
       const patch={tags:mergedTags,updated_at:new Date().toISOString()};
       if(fd.first_name)patch.first_name=fd.first_name;
       if(fd.last_name)patch.last_name=fd.last_name;
@@ -439,7 +469,7 @@ async function submitForm(){
         body:JSON.stringify({
           first_name:fd.first_name||null,last_name:fd.last_name||null,
           email:fd.email||null,phone:fd.phone||null,birthday:fd.birthday||null,
-          is_newsletter:fd.newsletter,tags:['Styleberatung','Email'],
+          is_newsletter:fd.newsletter,tags:fd.newsletter?['Moosbruggert','Newsletter']:['Moosbruggert'],
           source:['moosbruggern'],is_active:true,vip_tier:'standard',
           purchase_count:0,lifetime_value:0,
           updated_at:new Date().toISOString()
@@ -468,8 +498,42 @@ async function submitForm(){
   }catch(e){
     console.error(e);
     btn.textContent='Profil speichern ✓';btn.disabled=false;
-    alert('Fehler beim Speichern. Bitte versuchen Sie es erneut.\n\n'+e.message);
+    showError('s5-error','Fehler beim Speichern – bitte erneut versuchen. ('+e.message+')');
   }
+}
+
+// ── RESET FOR NEXT GUEST ─────────────────────────────────────────
+function resetForNextGuest(){
+  // Reset state
+  fd={first_name:'',last_name:'',email:'',phone:'',birthday:'',newsletter:true,
+    tournament_winner:'',selected_colors:[],color_count:null,color_type:'',textures:[]};
+  tQueue=[];tChampion='';tPlayed=0;tTotal=0;
+
+  // Reset form fields
+  ['f-first','f-last','f-email','f-phone','f-birthday'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('f-newsletter').checked=true;
+
+  // Reset color palette selection
+  document.querySelectorAll('.swatch.sel').forEach(el=>el.classList.remove('sel'));
+  document.querySelectorAll('.count-btn.sel').forEach(el=>el.classList.remove('sel'));
+
+  // Reset farbtyp
+  document.querySelectorAll('.farb-btn.sel').forEach(el=>el.classList.remove('sel'));
+
+  // Reset textures
+  document.querySelectorAll('.texture-btn.sel').forEach(el=>el.classList.remove('sel'));
+
+  // Clear errors
+  ['s1-error','s3-error','s4-error','s5-error'].forEach(clearError);
+
+  // Back to welcome
+  document.getElementById('s'+step).classList.remove('active');
+  step=0;
+  document.getElementById('s0').classList.add('active');
+  document.getElementById('progress').style.width='0%';
+  window.scrollTo(0,0);
 }
 
 // Init
