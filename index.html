@@ -620,7 +620,7 @@ async function submitForm(){
       if(fd.selected_colors.length){const existing_c=ep.preferred_colors||[];prefData.preferred_colors=[...new Set([...existing_c,...fd.selected_colors])];}
       if(fd.color_type)prefData.color_type=fd.color_type;
       if(fd.color_count)prefData.color_count=fd.color_count;
-      if(fd.textures.length)prefData.preferred_textures=fd.textures;
+      if(fd.textures.length){const existing_t=ep.preferred_textures||[];prefData.preferred_textures=[...new Set([...existing_t,...fd.textures])];}
     }
 
     await fetch(prefUrl,{method:prefMethod,headers:h,body:JSON.stringify(prefData)});
