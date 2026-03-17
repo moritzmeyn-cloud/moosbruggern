@@ -617,7 +617,7 @@ async function submitForm(){
     }else{
       // Bestehender Eintrag: ausgefüllte Schritte aktualisieren, übersprungene Schritte behalten
       if(fd.tournament_winner){const existing_b=ep.preferred_brands||[];if(!existing_b.includes(fd.tournament_winner))prefData.preferred_brands=[...existing_b,fd.tournament_winner];}
-      if(fd.selected_colors.length)prefData.preferred_colors=fd.selected_colors;
+      if(fd.selected_colors.length){const existing_c=ep.preferred_colors||[];prefData.preferred_colors=[...new Set([...existing_c,...fd.selected_colors])];}
       if(fd.color_type)prefData.color_type=fd.color_type;
       if(fd.color_count)prefData.color_count=fd.color_count;
       if(fd.textures.length)prefData.preferred_textures=fd.textures;
