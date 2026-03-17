@@ -616,7 +616,7 @@ async function submitForm(){
       prefData.preferred_textures=fd.textures.length?fd.textures:null;
     }else{
       // Bestehender Eintrag: ausgefüllte Schritte aktualisieren, übersprungene Schritte behalten
-      if(fd.tournament_winner)prefData.preferred_brands=[fd.tournament_winner];
+      if(fd.tournament_winner){const existing_b=ep.preferred_brands||[];if(!existing_b.includes(fd.tournament_winner))prefData.preferred_brands=[...existing_b,fd.tournament_winner];}
       if(fd.selected_colors.length)prefData.preferred_colors=fd.selected_colors;
       if(fd.color_type)prefData.color_type=fd.color_type;
       if(fd.color_count)prefData.color_count=fd.color_count;
