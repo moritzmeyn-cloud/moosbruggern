@@ -44,6 +44,9 @@ html,body{min-height:100%;background:#FFFBE9;}
 
 /* TOGGLE */
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--gray2);margin-top:4px;}
+.addr-toggle-btn{background:none;border:none;color:rgba(26,23,104,.5);font-size:13px;font-weight:600;cursor:pointer;padding:10px 0 4px;text-align:left;width:100%;letter-spacing:.01em;}
+.addr-toggle-btn:hover{color:var(--black);}
+#addr-block{padding-top:8px;}
 .toggle-label{font-size:14px;font-weight:600;color:var(--black);}
 .toggle-hint{font-size:12px;color:var(--gray3);margin-top:3px;}
 .toggle{position:relative;width:46px;height:27px;flex-shrink:0;}
@@ -226,6 +229,22 @@ html,body{min-height:100%;background:#FFFBE9;}
       <div class="field"><label>Vorname *</label><input id="f-first" type="text" placeholder="Marie" autocomplete="given-name"></div>
       <div class="field"><label>Nachname</label><input id="f-last" type="text" placeholder="Müller" autocomplete="family-name"></div>
     </div>
+    <button class="addr-toggle-btn" onclick="toggleAddressBlock()" id="addr-toggle-btn">+ Adresse hinzufügen <span style="font-size:11px;opacity:.6;">(optional)</span></button>
+    <div id="addr-block" style="display:none;">
+      <div class="field"><label>Straße &amp; Hausnummer</label><input id="f-street" type="text" placeholder="Musterstraße 12" autocomplete="street-address"></div>
+      <div class="field-row">
+        <div class="field" style="flex:0 0 100px;"><label>PLZ</label><input id="f-postal" type="text" placeholder="83700" inputmode="numeric" maxlength="10"></div>
+        <div class="field"><label>Ort</label><input id="f-city" type="text" placeholder="Rottach-Egern"></div>
+      </div>
+      <div class="field"><label>Land</label>
+        <select id="f-country">
+          <option value="DE">Deutschland</option>
+          <option value="AT">Österreich</option>
+          <option value="CH">Schweiz</option>
+          <option value="OTHER">Anderes Land</option>
+        </select>
+      </div>
+    </div>
     <div class="field"><label>E-Mail *</label><input id="f-email" type="email" placeholder="marie@beispiel.de" autocomplete="email" inputmode="email"></div>
     <div class="field"><label>Telefon</label><input id="f-phone" type="tel" placeholder="+49 ..." autocomplete="tel" inputmode="tel"></div>
     <div class="field"><label>Geburtsdatum</label><input id="f-birthday" type="date"></div>
@@ -398,8 +417,6 @@ html,body{min-height:100%;background:#FFFBE9;}
 </div>
 
 <script>
-const SUPABASE_URL='https://qimjxffdbsrvcbezydwo.supabase.co';
-const ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpbWp4ZmZkYnNydmNiZXp5ZHdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMzI4NTgsImV4cCI6MjA4NzcwODg1OH0.CKb27aRk1fqV0XTMz8L6iT9fJGUj-NdC83aK1Z0tbAk';
 const GAME_API_URL='https://qimjxffdbsrvcbezydwo.supabase.co/functions/v1/crm-api';
 
 // ── STAFF PIN ─────────────────────────────────────────────────────
@@ -516,6 +533,7 @@ const COLOR_GROUPS=[
 let step=0;
 let fd={first_name:'',last_name:'',email:'',phone:'',birthday:'',newsletter:true,
   gender:'',clothing_sizes:[],shoe_sizes:[],occasions:[],
+  street:null,postal_code:null,city:null,country:null,
   tournament_winner:'',selected_colors:[],color_count:null,color_type:'',textures:[]};
 
 // Tournament (King of the Hill)
@@ -557,6 +575,15 @@ function skipStep(to){
 }
 
 // ── STEP 1 ───────────────────────────────────────────────────────
+function toggleAddressBlock(){
+  const block=document.getElementById('addr-block');
+  const btn=document.getElementById('addr-toggle-btn');
+  const open=block.style.display==='none';
+  block.style.display=open?'block':'none';
+  btn.textContent=open?'− Adresse ausblenden':'+ Adresse hinzufügen ';
+  if(open){const span=document.createElement('span');span.style.cssText='font-size:11px;opacity:.6';span.textContent='(optional)';btn.appendChild(span);}
+}
+
 function selectGender(g,el){
   document.querySelectorAll('.gender-chip').forEach(c=>c.classList.remove('sel'));
   el.classList.add('sel');fd.gender=g;
@@ -574,6 +601,10 @@ function nextFromBasics(){
   fd.phone=document.getElementById('f-phone').value.trim();
   fd.birthday=document.getElementById('f-birthday').value||null;
   fd.newsletter=document.getElementById('f-newsletter').checked;
+  fd.street=document.getElementById('f-street').value.trim()||null;
+  fd.postal_code=document.getElementById('f-postal').value.trim()||null;
+  fd.city=document.getElementById('f-city').value.trim()||null;
+  fd.country=document.getElementById('f-country').value||null;
   initTournament();
   goTo(2);
 }
@@ -685,83 +716,40 @@ function toggleTexture(name,el){
 async function submitForm(){
   const btn=document.getElementById('submit-btn');
   btn.textContent='Wird gespeichert…';btn.disabled=true;
-  const h={'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
   try{
-    // 1) Prüfen ob E-Mail schon existiert (alle relevanten Felder laden)
-    const checkRes=await fetch(SUPABASE_URL+'/rest/v1/customers?email=eq.'+encodeURIComponent(fd.email)+'&select=id,tags,first_name,last_name,phone,birthday,is_newsletter,gender,clothing_size,shoe_size',{headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY}});
-    const existing=await checkRes.json();
-    let cid;
-
-    if(existing&&existing.length){
-      // Kunde existiert → nur leere Felder befüllen, Tags mergen
-      cid=existing[0].id;
-      const ex=existing[0];
-
-      const newTags=['Moosbruggert'];
-      if(fd.newsletter)newTags.push('Newsletter');
-      const mergedTags=[...new Set([...(ex.tags||[]),...newTags])];
-      const patch={tags:mergedTags,updated_at:new Date().toISOString()};
-      // Eingetragene Felder aktualisieren, leere Felder behalten
-      if(fd.first_name)patch.first_name=fd.first_name;
-      if(fd.last_name)patch.last_name=fd.last_name;
-      if(fd.phone)patch.phone=fd.phone;
-      if(fd.birthday)patch.birthday=fd.birthday;
-      if(fd.newsletter)patch.is_newsletter=true;
-      if(fd.gender)patch.gender=fd.gender;
-      if(fd.clothing_sizes.length)patch.clothing_size=fd.clothing_sizes.join(', ');
-      if(fd.shoe_sizes.length)patch.shoe_size=fd.shoe_sizes.join(', ');
-
-      await fetch(SUPABASE_URL+'/rest/v1/customers?id=eq.'+cid,{method:'PATCH',headers:h,body:JSON.stringify(patch)});
-    }else{
-      // Neuer Kunde → POST
-      const newCustomerData={
-          first_name:fd.first_name||null,last_name:fd.last_name||null,
-          email:fd.email||null,phone:fd.phone||null,birthday:fd.birthday||null,
-          is_newsletter:fd.newsletter,tags:fd.newsletter?['Moosbruggert','Newsletter']:['Moosbruggert'],
-          source:[IS_PAD_MODE?'moosbruggern':'qr-code'],is_active:true,vip_tier:'standard',
-          purchase_count:0,lifetime_value:0,
-          gender:fd.gender||null,clothing_size:fd.clothing_sizes.length?fd.clothing_sizes.join(', '):null,shoe_size:fd.shoe_sizes.length?fd.shoe_sizes.join(', '):null,
-          updated_at:new Date().toISOString()
-        };
-      if(gameStaffSession&&gameStaffSession.staff_name){
-        newCustomerData.created_by_staff_name=gameStaffSession.staff_name;
-      }
-      const cr=await fetch(SUPABASE_URL+'/rest/v1/customers',{method:'POST',headers:h,
-        body:JSON.stringify(newCustomerData)});
-      if(!cr.ok)throw new Error(await cr.text());
-      const cd=await cr.json();
-      cid=cd[0]?.id;
-      if(!cid)throw new Error('Keine Kunden-ID erhalten');
+    const payload={
+      action:'save_game_data',
+      email:fd.email,
+      first_name:fd.first_name||null,
+      last_name:fd.last_name||null,
+      phone:fd.phone||null,
+      birthday:fd.birthday||null,
+      is_newsletter:fd.newsletter,
+      gender:fd.gender||null,
+      clothing_size:fd.clothing_sizes.length?fd.clothing_sizes.join(', '):null,
+      shoe_size:fd.shoe_sizes.length?fd.shoe_sizes.join(', '):null,
+      street:fd.street||null,
+      postal_code:fd.postal_code||null,
+      city:fd.city||null,
+      country:fd.country||null,
+      tournament_winner:fd.tournament_winner||null,
+      selected_colors:fd.selected_colors,
+      color_type:fd.color_type||null,
+      color_count:fd.color_count||null,
+      textures:fd.textures,
+      occasions:fd.occasions,
+      source:IS_PAD_MODE?'moosbruggern':'qr-code',
+    };
+    if(gameStaffSession&&gameStaffSession.token){
+      payload.game_token=gameStaffSession.token;
     }
-
-    // 2) Präferenzen speichern
-    const pr=await fetch(SUPABASE_URL+'/rest/v1/customer_preferences?customer_id=eq.'+cid+'&select=*',{headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY}});
-    const existingPref=await pr.json();
-    const prefExists=existingPref&&existingPref.length;
-    const ep=prefExists?existingPref[0]:{};
-
-    const prefMethod=prefExists?'PATCH':'POST';
-    const prefUrl=SUPABASE_URL+'/rest/v1/customer_preferences'+(prefExists?'?customer_id=eq.'+cid:'');
-    const prefData={customer_id:cid,updated_at:new Date().toISOString()};
-    if(!prefExists){
-      // Neuer Eintrag: alle Felder initialisieren
-      prefData.preferred_brands=fd.tournament_winner?[fd.tournament_winner]:[];
-      prefData.preferred_colors=fd.selected_colors;
-      prefData.color_type=fd.color_type||null;
-      prefData.color_count=fd.color_count||null;
-      prefData.preferred_textures=fd.textures.length?fd.textures:[];
-      prefData.preferred_occasions=fd.occasions.length?fd.occasions:[];
-    }else{
-      // Bestehender Eintrag: ausgefüllte Schritte aktualisieren, übersprungene Schritte behalten
-      if(fd.tournament_winner){const existing_b=ep.preferred_brands||[];if(!existing_b.includes(fd.tournament_winner))prefData.preferred_brands=[...existing_b,fd.tournament_winner];}
-      if(fd.selected_colors.length){const existing_c=ep.preferred_colors||[];prefData.preferred_colors=[...new Set([...existing_c,...fd.selected_colors])];}
-      if(fd.color_type)prefData.color_type=fd.color_type;
-      if(fd.color_count)prefData.color_count=fd.color_count;
-      if(fd.textures.length){const existing_t=ep.preferred_textures||[];prefData.preferred_textures=[...new Set([...existing_t,...fd.textures])];}
-      if(fd.occasions.length){const existing_o=ep.preferred_occasions||[];prefData.preferred_occasions=[...new Set([...existing_o,...fd.occasions])];}
-    }
-
-    await fetch(prefUrl,{method:prefMethod,headers:h,body:JSON.stringify(prefData)});
+    const res=await fetch(GAME_API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    const data=await res.json();
+    if(!res.ok||data.error)throw new Error(data.error||'Unbekannter Fehler');
     goTo(7);
   }catch(e){
     console.error(e);
@@ -775,8 +763,15 @@ function resetForNextGuest(){
   // Reset state
   fd={first_name:'',last_name:'',email:'',phone:'',birthday:'',newsletter:true,
     gender:'',clothing_sizes:[],shoe_sizes:[],occasions:[],
+    street:null,postal_code:null,city:null,country:null,
     tournament_winner:'',selected_colors:[],color_count:null,color_type:'',textures:[]};
   tQueue=[];tChampion='';tPlayed=0;tTotal=0;
+
+  // Reset address block
+  document.getElementById('addr-block').style.display='none';
+  document.getElementById('addr-toggle-btn').innerHTML='+ Adresse hinzufügen <span style="font-size:11px;opacity:.6">(optional)</span>';
+  ['f-street','f-postal','f-city'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const countryEl=document.getElementById('f-country');if(countryEl)countryEl.value='DE';
 
   // Reset form fields
   ['f-first','f-last','f-email','f-phone','f-birthday'].forEach(id=>{
